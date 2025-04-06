@@ -1,0 +1,16 @@
+# Prisma generated files (optional)
+prisma/dev.db
+prisma/dev.sqlite
+prisma/generated/
+
+# Node.js
+node_modules/
+.env
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
