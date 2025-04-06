@@ -7,6 +7,9 @@ prisma/generated/
 node_modules/
 .env
 
+# typescript 
+dist
+
 # Logs
 logs/
 *.log
