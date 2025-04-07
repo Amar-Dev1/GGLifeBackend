@@ -12,10 +12,15 @@ import authenticateUser from "../middlewares/authenticatedUser";
 import authorizedUser from "../middlewares/authorizedUser";
 
 const router = express.Router();
-router.get("/", authenticateUser,authorizedUser, getAllWeeks);
-router.get("/:weekId", authenticateUser,authorizedUser, getSpecificWeek);
-router.post("/", authenticateUser,authorizedUser, validate(weekSchema), createWeek);
-router.put("/:weekId", authenticateUser, authorizedUser,updateWeek);
-router.delete("/:weekId", authenticateUser,authorizedUser, deleteWeek);
+router.get("/", authenticateUser, getAllWeeks);
+router.get("/:weekId", authenticateUser, authorizedUser, getSpecificWeek);
+router.post(
+  "/",
+  authenticateUser,
+  validate(weekSchema),
+  createWeek
+);
+router.put("/:weekId", authenticateUser, authorizedUser, updateWeek);
+router.delete("/:weekId", authenticateUser, authorizedUser, deleteWeek);
 
 export default router;

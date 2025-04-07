@@ -19,13 +19,19 @@ export const getAllWeeks = async (req: Request, res: Response) => {
 // get a specific week
 export const getSpecificWeek = async (req: Request, res: Response) => {
   const userId = req.user.id;
-  const {weekId} = req.params;
+  const  weekId  = req.params.weekId;
 
   try {
-    const week = await prisma.week.findUnique({
+    const week = await prisma.week.findFirst({
       where: { userId: userId, week_id: weekId },
       include: { tasks: true },
     });
+
+    if (!week) {
+      res.status(404).json({ message: "Week not found or access denied." });
+      return
+    }
+
     res.status(200).json(week);
   } catch (err) {
     res
@@ -36,15 +42,12 @@ export const getSpecificWeek = async (req: Request, res: Response) => {
 
 // create a new week
 export const createWeek = async (req: Request, res: Response) => {
-
   const userId = req.user.id;
-  const { title, score,completed,tasks } = req.body;
+  const { title, score, completed, tasks } = req.body;
   const trulyCompleted = score === 100 ? true : false;
 
   try {
-
     const result = await prisma.$transaction(async (prisma) => {
-      
       // 1. create a new week
       const week = await prisma.week.create({
         data: {
@@ -62,7 +65,7 @@ export const createWeek = async (req: Request, res: Response) => {
           score: task.score,
           weekId: week.week_id,
           userId,
-          completed:trulyCompleted
+          completed: trulyCompleted,
         }));
         await prisma.task.createMany({
           data: taskData,
@@ -70,31 +73,31 @@ export const createWeek = async (req: Request, res: Response) => {
       }
 
       return week;
-      
     });
 
-    res.status(201).json({result})
-
+    res.status(201).json({ result });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "An error occurred while creating the week" });
+    res
+      .status(500)
+      .json({ message: "An error occurred while creating the week" });
   }
 };
 
 // update a week
 export const updateWeek = async (req: Request, res: Response) => {
-  const  userId  = req.user.id;
-  const {weekId} = req.params;
-  const { title, score,completed } = req.body;
+  const userId = req.user.id;
+  const { weekId } = req.params;
+  const { title, score, completed } = req.body;
   const trulyCompleted = score === 100 ? true : false;
 
   try {
     const updatedWeek = await prisma.week.update({
-      where: { userId:userId,week_id: weekId },
+      where: { userId: userId, week_id: weekId },
       data: {
         title,
         score,
-        completed : trulyCompleted
+        completed: trulyCompleted,
       },
     });
     res.json(updatedWeek);
@@ -107,10 +110,10 @@ export const updateWeek = async (req: Request, res: Response) => {
 
 //  delete a week
 export const deleteWeek = async (req: Request, res: Response) => {
-  const  userId = req.user.id;
-  const {weekId} = req.params;
+  const userId = req.user.id;
+  const { weekId } = req.params;
   try {
-    await prisma.week.delete({ where: { userId:userId,week_id: weekId } });
+    await prisma.week.delete({ where: { userId: userId, week_id: weekId } });
     res.status(204).send();
   } catch (err) {
     res

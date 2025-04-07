@@ -18,15 +18,14 @@ import authorizedUser from "../middlewares/authorizedUser";
 const router = express.Router();
 
 // public routes
-router.post("/register", validate(userSchema), createUser); // ✅
-router.post("/login", loginUser); // ✅
+router.post("/register", validate(userSchema), createUser);
+router.post("/login", loginUser);
 
 // protected routes
-router.get("/", authenticateUser, isAdmin, listAllUsers); // ✅
-router.get("/:userId", authenticateUser, authorizedUser, getSpecificUser); // ✅
-router.put("/:userId", authenticateUser, authorizedUser, updateUser); // ✅
-router.delete("/:userId", authenticateUser, authorizedUser, deleteUser); // ✅
-router.delete("/", authenticateUser, isAdmin, deleteAllUsers); // ✅
+router.get("/", authenticateUser, isAdmin, listAllUsers);
+router.get("/:userId", authenticateUser, authorizedUser, getSpecificUser);
+router.put("/:userId", authenticateUser, authorizedUser, updateUser);
+router.delete("/:userId", authenticateUser, authorizedUser, deleteUser);
+router.delete("/", authenticateUser, isAdmin, deleteAllUsers);
 
 export default router;
-

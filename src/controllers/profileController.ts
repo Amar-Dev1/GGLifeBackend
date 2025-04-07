@@ -7,11 +7,9 @@ export const getAllProfiles = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const userId = req.user.id;
+
   try {
-    const profile = await prisma.profile.findMany({
-      where: { userId: userId },
-    });
+    const profile = await prisma.profile.findMany();
     res.status(200).json(profile);
   } catch (error: any) {
     console.error(error);
@@ -26,10 +24,10 @@ export const getSpecificProfile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { userId } = req.user.id;
+  const userId = req.user.id;
   const { profileId } = req.params;
   try {
-    const profile = await prisma.profile.findUnique({
+    const profile = await prisma.profile.findFirst({
       where: { userId: userId, profile_id: profileId },
     });
     res.status(200).json(profile);
