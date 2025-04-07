@@ -25,10 +25,9 @@ export const getSpecificProfile = async (
   res: Response
 ): Promise<void> => {
   const userId = req.user.id;
-  const { profileId } = req.params;
   try {
     const profile = await prisma.profile.findFirst({
-      where: { userId: userId, profile_id: profileId },
+      where: { userId: userId },
     });
     res.status(200).json(profile);
   } catch (error: any) {

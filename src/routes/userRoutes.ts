@@ -23,7 +23,7 @@ router.post("/login", loginUser);
 
 // protected routes
 router.get("/", authenticateUser, isAdmin, listAllUsers);
-router.get("/:userId", authenticateUser, authorizedUser, getSpecificUser);
+router.get("/me", authenticateUser, getSpecificUser);
 router.put("/:userId", authenticateUser, authorizedUser, updateUser);
 router.delete("/:userId", authenticateUser, authorizedUser, deleteUser);
 router.delete("/", authenticateUser, isAdmin, deleteAllUsers);

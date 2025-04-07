@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,19 +12,14 @@ model User {
   name      String
   email     String   @unique
   password  String
-  profile   Profile?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  role Role @default(USER)
+  role      String   @default("USER")
+  profile   Profile?
   tasks     Task[]
   weeks     Week[]
 
   @@index([user_id])
-}
-
-enum Role {
-  USER
-  ADMIN
 }
 
 model Profile {
@@ -41,27 +30,28 @@ model Profile {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   userId       String   @unique
-  user       User     @relation(fields: [userId], references: [user_id], onDelete: Cascade)
+  name         String?
+  user         User     @relation(fields: [userId], references: [user_id], onDelete: Cascade)
 }
 
 model Week {
   week_id   String    @id @default(uuid())
   title     String
   score     Float     @default(0)
-  completed Boolean @default(false)
-  tasks      Task[]
+  completed Boolean   @default(false)
   userId    String
-  user    User      @relation(fields: [userId], references: [user_id], onDelete: Cascade)
   createdAt DateTime? @default(now())
+  tasks     Task[]
+  user      User      @relation(fields: [userId], references: [user_id], onDelete: Cascade)
 }
 
 model Task {
-  task_id String @id @default(uuid())
-  title   String
-  score   Float  @default(0.0)
+  task_id   String  @id @default(uuid())
+  title     String
+  score     Float   @default(0.0)
   completed Boolean @default(false)
-  userId  String
-  weekId  String
-  user  User   @relation(fields: [userId], references: [user_id], onDelete: Cascade)
-  week    Week   @relation(fields: [weekId], references: [week_id], onDelete: Cascade)
+  userId    String
+  weekId    String
+  user      User    @relation(fields: [userId], references: [user_id], onDelete: Cascade)
+  week      Week    @relation(fields: [weekId], references: [week_id], onDelete: Cascade)
 }

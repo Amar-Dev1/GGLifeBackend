@@ -17,10 +17,11 @@ export const listAllUsers = async (req: Request, res: Response) => {
 
 // get a specific user
 export const getSpecificUser = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.user.id;
   try {
     const user = await prisma.user.findUnique({
       where: { user_id: userId },
+
       include: { profile: true },
     });
     res.status(200).json(user);
@@ -53,6 +54,7 @@ export const createUser = async (req: Request, res: Response) => {
           userId: user.user_id,
           bio: "",
           photo: null,
+          name:user.name
         },
       });
       return {

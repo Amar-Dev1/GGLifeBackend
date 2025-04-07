@@ -12,11 +12,10 @@ import authorizedUser from "../middlewares/authorizedUser";
 const router = express.Router();
 
 router.get("/", authenticateUser, authorizedUser, getAllProfiles);
-router.get("/:profileId", authenticateUser, authorizedUser, getSpecificProfile);
+router.get("/me", authenticateUser, getSpecificProfile);
 router.put(
-  "/:profileId",
+  "/me",
   authenticateUser,
-  authorizedUser,
   validate(profileSchema),
   updateProfile
 );
