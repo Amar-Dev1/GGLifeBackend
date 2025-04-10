@@ -9,11 +9,11 @@ import {
   updateWeek,
 } from "../services/weekService";
 
-export const createWeekController = async (req: authenticatedRequest, res: Response) => {
+export const createWeekController = async (req: Request, res: Response) => {
   try {
-    const {id:userId} = req.user
+    const { user } = req as authenticatedRequest;
 
-    const week = await createWeek(req.user, req.body);
+    const week = await createWeek(user, req.body);
     res.status(200).json({ message: "week created successfully", week });
     return;
   } catch (err) {
@@ -23,11 +23,11 @@ export const createWeekController = async (req: authenticatedRequest, res: Respo
   }
 };
 
-export const listWeeksController = async (req: authenticatedRequest, res: Response) => {
+export const listWeeksController = async (req: Request, res: Response) => {
   try {
-    const { id: userId } = req.user;
+    const { user } = req as authenticatedRequest;
 
-    const weeks = await listWeeks(req.user);
+    const weeks = await listWeeks(user);
 
     res.status(200).json({ message: "weeks fetched successfully", weeks });
   } catch (err) {
@@ -37,15 +37,12 @@ export const listWeeksController = async (req: authenticatedRequest, res: Respon
   }
 };
 
-export const updateWeekController = async (
-  req: authenticatedRequest,
-  res: Response
-) => {
+export const updateWeekController = async (req: Request, res: Response) => {
   try {
-    const { id: userId } = req.user;
+    const { user } = req as authenticatedRequest;
     const weekId = req.params.weekId;
 
-    const updatedweek = await updateWeek(req.user, weekId, req.body);
+    const updatedweek = await updateWeek(user, weekId, req.body);
     res.status(200).json({ message: "user updated successfully", updatedweek });
     return;
   } catch (err) {
@@ -55,10 +52,10 @@ export const updateWeekController = async (
   }
 };
 
-export const getSingleWeekController = async (req: authenticatedRequest, res: Response) => {
+export const getSingleWeekController = async (req: Request, res: Response) => {
   try {
-    const {id:userId} = req.user;
-    const week = await getSingleWeek(req.user, req.params.weekId);
+    const { user } = req as authenticatedRequest;
+    const week = await getSingleWeek(user, req.params.weekId);
     res.status(200).json({ message: "week fetched successfully", week });
     return;
   } catch (err) {
@@ -68,12 +65,11 @@ export const getSingleWeekController = async (req: authenticatedRequest, res: Re
   }
 };
 
-export const deleteWeekController = async (req: authenticatedRequest, res: Response) => {
+export const deleteWeekController = async (req: Request, res: Response) => {
   try {
+    const { user } = req as authenticatedRequest;
 
-    const {id:userId} = req.user
-    
-    const deletedWeek = await deleteWeek(req.user, req.params.weekId);
+    const deletedWeek = await deleteWeek(user, req.params.weekId);
     res.status(200).json({ message: "deleted successfully", deletedWeek });
   } catch (err) {
     res.status(400).json({
@@ -82,11 +78,11 @@ export const deleteWeekController = async (req: authenticatedRequest, res: Respo
   }
 };
 
-export const deleteAllWeeksController = async (req: authenticatedRequest, res: Response) => {
+export const deleteAllWeeksController = async (req: Request, res: Response) => {
   try {
-    const {id:userId}= req.user
+    const { user } = req as authenticatedRequest;
 
-    const deletedWeeks = await deleteWeeks(req.user);
+    const deletedWeeks = await deleteWeeks(user);
     res
       .status(200)
       .json({ message: "All users deleted successfully:", deletedWeeks });

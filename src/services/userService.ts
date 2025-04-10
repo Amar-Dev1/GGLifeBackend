@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const listUsers = async () => {
   try {
     const users = await prisma.user.findMany({ include: { profile: true } });
-    return  users ;
+    return users;
   } catch (err) {
     console.log("error during fetching users:", err);
     throw new Error(
@@ -20,7 +20,7 @@ export const getSingleUser = async (token: TokenPayload) => {
   try {
     // 1. check if user found
     const exists = await prisma.user.findUnique({
-      where: { user_id:token.id},
+      where: { user_id: token.id },
     });
     if (!exists) throw new Error("user not found");
 
@@ -29,7 +29,7 @@ export const getSingleUser = async (token: TokenPayload) => {
       include: { profile: true },
     });
 
-    return  user ;
+    return user;
   } catch (err) {
     console.log("error during fetching the user:", err);
     throw new Error(
@@ -41,20 +41,34 @@ export const getSingleUser = async (token: TokenPayload) => {
 export const updateUser = async (token: TokenPayload, data: SafeUser) => {
   try {
     // 1. check if user found
-    const user = await prisma.user.findUnique({ where: { user_id:token.id } });
+    const user = await prisma.user.findUnique({ where: { user_id: token.id } });
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-    if (!user) throw new Error("user not found");
+    // define the role
+
+    let role = user.role;
+    if (data.adminKey && data.adminKey === process.env.ADMIN_KEY) {
+      role = "ADMIN";
+    } else if (data.adminKey && data.adminKey === process.env.DISABLE_ADMIN) {
+      role = "USER";
+    }
+
+    let { adminKey, ...updateData } = data;
 
     // 2. update the user data
     const updatedUser = await prisma.user.update({
-      data: data,
+      data: {
+        ...updateData,
+        role,
+      },
       where: {
         user_id: token.id,
-        role: token.role,
       },
     });
 
-    return  updatedUser;
+    return updatedUser;
   } catch (err) {
     console.log("error during user updating:", err);
     throw new Error(
@@ -65,7 +79,7 @@ export const updateUser = async (token: TokenPayload, data: SafeUser) => {
 export const deleteUser = async (token: TokenPayload) => {
   try {
     // 1. check if user exists
-    const user = await prisma.user.findUnique({ where: { user_id:token.id } });
+    const user = await prisma.user.findUnique({ where: { user_id: token.id } });
     if (!user) throw new Error("user not found");
     await prisma.user.delete({
       where: { user_id: token.id, role: token.role },

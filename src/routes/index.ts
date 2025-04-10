@@ -11,7 +11,7 @@ const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("auth/",emailRoutes)
-router.use("/users", userRoutes);
+router.use("/users", authenticateUser,userRoutes);
 router.use("/profiles", authenticateUser, profileRoutes);
 router.use("/weeks", authenticateUser, weekRoutes);
 router.use("/weeks/:weekId/tasks", authenticateUser, taskRoutes);

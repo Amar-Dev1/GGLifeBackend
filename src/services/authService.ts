@@ -10,34 +10,38 @@ export const registerUser = async (data: RegisterInput) => {
   try {
     const result = await prisma.$transaction(async (prisma) => {
       // 1. check if user already exists
-      const existing = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { email: data.email },
       });
-      if (existing) throw new Error("User already exists");
+      if (user) throw new Error("User already exists");
 
       // 2. hash the password
       const hashedPassword = await bcrypt.hash(data.password, 10);
 
       // 3. create the user
-      const user = await prisma.user.create({
+      let role: "USER" | "ADMIN" = "USER"; // Default role is USER
+      if (data.adminKey && data.adminKey === process.env.ADMIN_KEY) {
+        role = "ADMIN";
+   }
+  
+      let { adminKey, ...updateData } = data;
+      const createdUser = await prisma.user.create({
         data: {
-          name: data.name,
-          email: data.email,
-          password: hashedPassword,
+      ...updateData,password:hashedPassword, role
         },
       });
 
       // 4. create a profile
       const profile = await prisma.profile.create({
         data: {
-          userId: user.user_id,
-          name: user.name,
+          userId: createdUser.user_id,
+          name: createdUser.name,
           photo: null,
           bio: "",
         },
       });
 
-      return { user: { ...user, profile } };
+      return { user: { ...createdUser, profile } };
     });
     return result;
   } catch (err) {

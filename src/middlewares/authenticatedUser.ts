@@ -9,6 +9,7 @@ const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
     return;
   }
 
+  
   try {
     const decoded = jwt.verify(
       token,
@@ -16,6 +17,9 @@ const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
     ) as TokenPayload;
 
     (req as authenticatedRequest).user = { id: decoded.id, role: decoded.role };
+
+    console.log("Decoded token:", decoded);
+    console.log("User role:", decoded.role);
 
     next();
   } catch (err) {

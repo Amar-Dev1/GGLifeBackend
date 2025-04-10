@@ -4,6 +4,7 @@ export interface RegisterInput {
     name: string;
     email: string;
     password: string;
+    adminKey?:string;
 }
 
 export interface LoginInput {

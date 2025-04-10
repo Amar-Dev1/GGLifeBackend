@@ -5,6 +5,7 @@ export interface User {
   password: string;
   role: "USER" | "ADMIN";
   verified: false | true;
+  adminKey?:string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,6 +14,7 @@ export interface SafeUser {
   email: string;
   name: string;
   role: "USER" | "ADMIN";
+  adminKey?:string;
   verified: false | true;
 }
 
