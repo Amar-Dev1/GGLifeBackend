@@ -1,14 +1,20 @@
-import express from "express";
-import taskRoutes from "./taskRoutes";
+import { Router } from "express";
+import authRoutes from "./authRoutes";
 import userRoutes from "./userRoutes";
-import weekRoutes from "./weekRoutes";
 import profileRoutes from "./profileRoutes";
+import weekRoutes from "./weekRoutes";
+import taskRoutes from "./taskRoutes";
+import emailRoutes from './emailRoutes';
+import authenticateUser from "../middlewares/authenticatedUser";
 
-const router = express.Router();
+const router = Router();
 
-router.use("/tasks", taskRoutes);
+router.use("/auth", authRoutes);
+router.use("auth/",emailRoutes)
 router.use("/users", userRoutes);
-router.use("/weeks", weekRoutes);
-router.use("/profile", profileRoutes);
+router.use("/profiles", authenticateUser, profileRoutes);
+router.use("/weeks", authenticateUser, weekRoutes);
+router.use("/weeks/:weekId/tasks", authenticateUser, taskRoutes);
+router.use("/tasks", authenticateUser, taskRoutes);
 
 export default router;

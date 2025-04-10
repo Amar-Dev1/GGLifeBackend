@@ -1,65 +1,32 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { authenticatedRequest, TokenPayload } from "../types/auth.types";
+import { getSingleProfile, updateProfile } from "../services/profileService";
 
-const prisma = new PrismaClient();
-
-export const getAllProfiles = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-
+export const updateProfileController = async (req: Request, res: Response) => {
   try {
-    const profile = await prisma.profile.findMany();
-    res.status(200).json(profile);
-  } catch (error: any) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch profile", error: error.message });
-  }
-};
+  
+    const {user} = req as authenticatedRequest;
 
-// get a specific profile
-export const getSpecificProfile = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const userId = req.user.id;
-  try {
-    const profile = await prisma.profile.findFirst({
-      where: { userId: userId },
+    const updatedProfile = await updateProfile(user, req.body);
+    res.status(200).json({ message: "profile updated successfully", updatedProfile });
+    return;
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
     });
-    res.status(200).json(profile);
-  } catch (error: any) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch profile", error: error.message });
   }
 };
 
-// update a profile
-export const updateProfile = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { userId } = req.user.id;
-  const { profileId } = req.params;
-  const { photo, bio } = req.body;
+export const getSingleProfileController = async (req: Request, res: Response) => {
   try {
-    const updatedProfile = await prisma.profile.update({
-      where: { userId: userId, profile_id: profileId },
-      data: {
-        photo,
-        bio,
-      },
+    const {user} = req as authenticatedRequest;
+    const profile = await getSingleProfile(user);
+    res.status(200).json({ message: "profile fetched successfully", profile });
+    return;
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
     });
-    res.status(201).json(updatedProfile);
-    console.log("updated successfuly !");
-  } catch (error: any) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "An error occurred while updating the profile" });
   }
 };
+

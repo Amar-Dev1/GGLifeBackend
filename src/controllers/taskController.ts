@@ -1,124 +1,91 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
+import { authenticatedRequest, TokenPayload } from "../types/auth.types";
+import {
+  deletetask,
+  deletetasks,
+  getSingletask,
+  listtasks,
+  updatetask,
+} from "../services/taskService";
 
-const prisma = new PrismaClient();
-
-// get all tasks for a user
-export const getAllTasks = async (req: Request, res: Response) => {
-  const { userId } = req.user.id;
-  const { weekId } = req.params;
+export const listtasksController = async (req:Request, res: Response) => {
   try {
-    const tasks = await prisma.task.findMany({
-      where: { userId: userId, weekId: weekId },
-      include: { week: true },
-    });
-    res.status(200).json(tasks);
+    const {user} = req as authenticatedRequest
+    const tasks = await listtasks(user, req.params.weekId);
+
+    res.status(200).json({ message: "tasks fetched successfully", tasks });
   } catch (err) {
-    res.status(500).json({ message: "An error occurred while fetching tasks" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-// get a specific task
-export const getSpecificTask = async (req: Request, res: Response) => {
-  const { userId } = req.user.id;
-  const { weekId, taskId } = req.params;
+export const getSingletaskController = async (req:Request, res: Response) => {
   try {
-    const task = await prisma.task.findUnique({
-      where: { userId: userId, weekId: weekId, task_id: taskId },
-    });
-    res.status(200).json(task);
+    const {user} = req as authenticatedRequest
+
+    const task = await getSingletask(
+      user,
+      req.params.weekId,
+      req.params.taskId,
+    );
+    res.status(200).json({ message: "task fetched successfully", task });
+    return;
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occurred while fetching the task" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-// create a new task
-// export const createtask = async (
-//   req: Request,
-//   res: Response
-// ): Promise<void> => {
-//   const { userId } = req.user.id;
-//   const { weekId } = req.params;
-//   const { title, score, completed } = req.body;
-//   const trulyCompleted = score === 100 ? true : false;
-
-//   try {
-//     // Validate that the user exists
-//     const userExists = await prisma.user.findUnique({
-//       where: { user_id: userId },
-//     });
-//     if (!userExists) {
-//       res.status(404).json({ message: "User not found" });
-//       return;
-//     }
-
-//     // Validate that the week exists and belongs to the user
-//     const weekExists = await prisma.week.findFirst({
-//       where: { week_id: weekId, userId: userId },
-//     });
-//     if (!weekExists) {
-//       res
-//         .status(404)
-//         .json({ message: "Week not found or does not belong to the user" });
-//       return;
-//     }
-
-//     // Create the task
-//     const task = await prisma.task.create({
-//       data: {
-//         title,
-//         score: score || 0, // Default score to 0 if not provided
-//         userId,
-//         weekId,
-//         completed: trulyCompleted,
-//       },
-//     });
-
-//     res.status(201).json(task);
-//   } catch (err) {
-//     console.error(err);
-//     res
-//       .status(500)
-//       .json({ message: "An error occurred while creating a task" });
-//   }
-// };
-
-// update a task
-export const updateTask = async (req: Request, res: Response) => {
-  const { userId } = req.user.id;
-  const { weekId, taskId } = req.params;
-  const { title, score, completed } = req.body;
-  const trulyCompleted = score === 100 ? true : false;
-
+export const updatetaskController = async (req:Request, res: Response) => {
   try {
-    const updatedTask = await prisma.task.update({
-      where: { userId: userId, weekId: weekId, task_id: taskId },
-      data: {
-        title,
-        score,
-        completed: trulyCompleted,
-      },
-    });
-    res.json(updatedTask);
+    const {user} = req as authenticatedRequest;
+
+    const weekId = req.params.weekId;
+    const taskId = req.params.taskId;
+
+    const updatedtask = await updatetask(user, weekId, taskId, req.body);
+    res.status(200).json({ message: "user updated successfully", updatedtask });
+    return;
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occurred while updating the task" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-//  delete a task
-export const deleteTask = async (req: Request, res: Response) => {
-  const { userId } = req.user.id;
-  const { weekId, taskId } = req.params;
+export const deletetaskController = async (req:Request, res: Response) => {
   try {
-    await prisma.task.delete({ where: { userId, weekId, task_id: taskId } });
-    res.status(204).send();
+    
+    const {user} = req as authenticatedRequest
+
+    const deletedtask = await deletetask(
+      user,
+      req.params.weekId,
+      req.params.taskId
+    );
+    res.status(200).json({ message: "deleted successfully", deletedtask });
   } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
+  }
+};
+
+export const deleteAlltasksController = async (req:Request, res: Response) => {
+  try {
+    const {user} = req as authenticatedRequest
+
+    const deletedtasks = await deletetasks(user, req.params.weekId);
     res
-      .status(500)
-      .json({ message: "An error occurred while deleting the task" });
+      .status(200)
+      .json({ message: "All users deleted successfully:", deletedtasks });
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };

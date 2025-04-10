@@ -1,159 +1,103 @@
-import { NextFunction, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import generateToken from "../utils/generateToken";
+import { Request, Response } from "express";
+import {
+  deleteUser,
+  deleteUsers,
+  getSingleUser,
+  listUsers,
+  updateUser,
+} from "../services/userService";
+import jwt from "jsonwebtoken";
+import { TokenPayload } from "../types/auth.types";
 
-const prisma = new PrismaClient();
-
-// list users
-export const listAllUsers = async (req: Request, res: Response) => {
-  const users = await prisma.user.findMany();
+export const listUsersController = async (req: Request, res: Response) => {
   try {
-    res.status(200).json(users);
+    const users = await listUsers();
+    res.status(200).json({ message: "users fetched successfully" , users});
   } catch (err) {
-    res.status(500).json({ message: "An error occured when fetching users" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-// get a specific user
-export const getSpecificUser = async (req: Request, res: Response) => {
-  const userId = req.user.id;
+export const updateUserController = async (req: Request, res: Response) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { user_id: userId },
+    const token = req.headers["authorization"]?.split(" ")[1];
 
-      include: { profile: true },
-    });
-    res.status(200).json(user);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occured when fetching the user" });
-  }
-};
+    const decoded = jwt.verify(token!, process.env.JWT_SECRET as string);
 
-// register a user
-export const createUser = async (req: Request, res: Response) => {
-  const { name, email, password, adminKey } = req.body;
-  try {
-    const result = await prisma.$transaction(async (prisma) => {
-      // determine the user role
-      const role = adminKey === process.env.ADMIN_KEY ? "ADMIN" : "USER";
-
-      // 1. hash the password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // 2. create a user
-      const user = await prisma.user.create({
-        data: { name, email, password: hashedPassword, role },
-      });
-
-      // 4. automatically create a profile
-      const profile = await prisma.profile.create({
-        data: {
-          userId: user.user_id,
-          bio: "",
-          photo: null,
-          name:user.name
-        },
-      });
-      return {
-        user: { ...user, profile },
-      };
-    });
-
-    // 5. send the response
-    res.status(201).json(result);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occured when creating the user" });
-  }
-};
-
-// login a user
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body;
-
-  try {
-    // find the user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
+    req.user = {
+      id: (decoded as TokenPayload).id,
+      role: (decoded as TokenPayload).role,
+    };
+    if (!req.user) {
+      console.log("error during updating user data");
       return;
     }
-    // verify the password
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const updatedUser = await updateUser(req.user, req.body);
+    res.status(200).json({ message: "user updated successfully", updatedUser });
+    return;
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
+  }
+};
 
-    if (!passwordMatch) {
-      res.status(400).json({ message: "wrong email or password" });
+export const getSingleUserController = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers["authorization"]?.split(" ")[1];
+
+    const decoded = jwt.verify(token!, process.env.JWT_SECRET as string);
+
+    req.user = {
+      id: (decoded as TokenPayload).id,
+      role: (decoded as TokenPayload).role,
+    };
+    if (!req.user) {
+      console.log("error during fetching the user");
       return;
     }
-    // generate a token
-    const token = generateToken(user.user_id, user.role);
-    // send the response
-    res.status(200).json({
-      user,
-      token,
+    const user = await getSingleUser(req.user);
+    res.status(200).json({ message: "user fetched successfully", user });
+    return;
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
     });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "An error occured when logging in the user" });
   }
 };
 
-// update user
-export const updateUser = async (req: Request, res: Response) => {
-  const { userId } = req.params;
-  const { name, email, password, adminKey } = req.body;
+export const deleteUserController = async (req: Request, res: Response) => {
   try {
-    const role = adminKey === process.env.ADMIN_KEY ? "ADMIN" : "USER";
+    const token = req.headers["authorization"]?.split(" ")[1];
 
-    const user = await prisma.user.update({
-      where: { user_id: userId },
-      data: {
-        name,
-        email,
-        password,
-        role,
-      },
+    const decoded = jwt.verify(token!, process.env.JWT_SECRET as string);
+
+    req.user = {
+      id: (decoded as TokenPayload).id,
+      role: (decoded as TokenPayload).role,
+    };
+    if (!req.user) {
+      console.log("error during deleting the user");
+      return;
+    }
+    await deleteUser(req.user);
+    res.status(200).json({ message: "deleted successfully" });
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
     });
-    res.json(user);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occured when updating the user" });
   }
 };
 
-// delete user
-export const deleteUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { userId } = req.params;
+export const deleteUsersController = async (req: Request, res: Response) => {
   try {
-    await prisma.user.delete({ where: { user_id: userId } });
-    res.status(204).json({ message: "Deleted successfuly !" });
+    await deleteUsers();
+    res.status(200).json({ message: "All users deleted successfully" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occured when deleting the user" });
-  }
-};
-
-// delete all users
-export const deleteAllUsers = async (req: Request, res: Response) => {
-  try {
-    await prisma.user.deleteMany();
-    res.status(204).json({ message: "Deleted successfuly !" });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occured when deleting the users" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };

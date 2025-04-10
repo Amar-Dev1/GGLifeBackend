@@ -15,6 +15,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      String   @default("USER")
+  verified  Boolean  @default(false)
   profile   Profile?
   tasks     Task[]
   weeks     Week[]

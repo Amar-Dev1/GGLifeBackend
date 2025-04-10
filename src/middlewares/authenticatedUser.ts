@@ -1,26 +1,27 @@
-import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
-declare module "express-serve-static-core" {
-  interface Request {
-    user?: any;
-  }
-}
+import { Request, NextFunction, Response } from "express";
+import { authenticatedRequest, TokenPayload } from "../types/auth.types";
 
 const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) {
-    res.status(401).json({ message: "Access denied. token not provided" });
+    res.status(401).json({ message: "Access denied. Token not provided" });
     return;
   }
+
   try {
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    req.user = { id: (decoded as any).id, role: (decoded as any).role };
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as TokenPayload;
+
+    (req as authenticatedRequest).user = { id: decoded.id, role: decoded.role };
+
     next();
   } catch (err) {
     console.error("Token verification failed:", err);
     res.status(401).json({ message: "Invalid or expired token" });
+    return;
   }
 };
 

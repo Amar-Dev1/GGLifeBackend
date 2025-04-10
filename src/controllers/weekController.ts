@@ -1,123 +1,98 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { authenticatedRequest } from "../types/auth.types";
+import {
+  createWeek,
+  deleteWeek,
+  deleteWeeks,
+  getSingleWeek,
+  listWeeks,
+  updateWeek,
+} from "../services/weekService";
 
-const prisma = new PrismaClient();
-
-// get all weeks belong to the user
-export const getAllWeeks = async (req: Request, res: Response) => {
-  const userId = req.user.id;
+export const createWeekController = async (req: authenticatedRequest, res: Response) => {
   try {
-    const weeks = await prisma.week.findMany({
-      where: { userId: userId },
-    });
-    res.status(200).json(weeks);
+    const {id:userId} = req.user
+
+    const week = await createWeek(req.user, req.body);
+    res.status(200).json({ message: "week created successfully", week });
+    return;
   } catch (err) {
-    res.status(500).json({ message: "An error occurred while fetching weeks" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-// get a specific week
-export const getSpecificWeek = async (req: Request, res: Response) => {
-  const userId = req.user.id;
-  const  weekId  = req.params.weekId;
-
+export const listWeeksController = async (req: authenticatedRequest, res: Response) => {
   try {
-    const week = await prisma.week.findFirst({
-      where: { userId: userId, week_id: weekId },
-      include: { tasks: true },
-    });
+    const { id: userId } = req.user;
 
-    if (!week) {
-      res.status(404).json({ message: "Week not found or access denied." });
-      return
-    }
+    const weeks = await listWeeks(req.user);
 
-    res.status(200).json(week);
+    res.status(200).json({ message: "weeks fetched successfully", weeks });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occured when fetching the week" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-// create a new week
-export const createWeek = async (req: Request, res: Response) => {
-  const userId = req.user.id;
-  const { title, score, completed, tasks } = req.body;
-  const trulyCompleted = score === 100 ? true : false;
-
+export const updateWeekController = async (
+  req: authenticatedRequest,
+  res: Response
+) => {
   try {
-    const result = await prisma.$transaction(async (prisma) => {
-      // 1. create a new week
-      const week = await prisma.week.create({
-        data: {
-          title,
-          score,
-          userId,
-          completed: trulyCompleted,
-        },
-      });
+    const { id: userId } = req.user;
+    const weekId = req.params.weekId;
 
-      // 2. create tasks
-      if (tasks && tasks.length > 0) {
-        const taskData = tasks.map((task: any) => ({
-          title: task.title,
-          score: task.score,
-          weekId: week.week_id,
-          userId,
-          completed: trulyCompleted,
-        }));
-        await prisma.task.createMany({
-          data: taskData,
-        });
-      }
-
-      return week;
-    });
-
-    res.status(201).json({ result });
+    const updatedweek = await updateWeek(req.user, weekId, req.body);
+    res.status(200).json({ message: "user updated successfully", updatedweek });
+    return;
   } catch (err) {
-    console.error(err);
-    res
-      .status(500)
-      .json({ message: "An error occurred while creating the week" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-// update a week
-export const updateWeek = async (req: Request, res: Response) => {
-  const userId = req.user.id;
-  const { weekId } = req.params;
-  const { title, score, completed } = req.body;
-  const trulyCompleted = score === 100 ? true : false;
-
+export const getSingleWeekController = async (req: authenticatedRequest, res: Response) => {
   try {
-    const updatedWeek = await prisma.week.update({
-      where: { userId: userId, week_id: weekId },
-      data: {
-        title,
-        score,
-        completed: trulyCompleted,
-      },
-    });
-    res.json(updatedWeek);
+    const {id:userId} = req.user;
+    const week = await getSingleWeek(req.user, req.params.weekId);
+    res.status(200).json({ message: "week fetched successfully", week });
+    return;
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "An error occurred while updating the week" });
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };
 
-//  delete a week
-export const deleteWeek = async (req: Request, res: Response) => {
-  const userId = req.user.id;
-  const { weekId } = req.params;
+export const deleteWeekController = async (req: authenticatedRequest, res: Response) => {
   try {
-    await prisma.week.delete({ where: { userId: userId, week_id: weekId } });
-    res.status(204).send();
+
+    const {id:userId} = req.user
+    
+    const deletedWeek = await deleteWeek(req.user, req.params.weekId);
+    res.status(200).json({ message: "deleted successfully", deletedWeek });
   } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
+  }
+};
+
+export const deleteAllWeeksController = async (req: authenticatedRequest, res: Response) => {
+  try {
+    const {id:userId}= req.user
+
+    const deletedWeeks = await deleteWeeks(req.user);
     res
-      .status(500)
-      .json({ message: "An error occurred while deleting the week" });
+      .status(200)
+      .json({ message: "All users deleted successfully:", deletedWeeks });
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 };

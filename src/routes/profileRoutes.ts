@@ -1,23 +1,13 @@
-import express from "express";
+import { Router } from "express";
 import {
-  getAllProfiles,
-  getSpecificProfile,
-  updateProfile,
+  getSingleProfileController,
+  updateProfileController,
 } from "../controllers/profileController";
-import { validate } from "../middlewares/validator";
-import { profileSchema } from "../validations/profileSchema";
-import authenticateUser from "../middlewares/authenticatedUser";
-import authorizedUser from "../middlewares/authorizedUser";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", authenticateUser, authorizedUser, getAllProfiles);
-router.get("/me", authenticateUser, getSpecificProfile);
-router.put(
-  "/me",
-  authenticateUser,
-  validate(profileSchema),
-  updateProfile
-);
+router
+  .get("/me", getSingleProfileController)
+  .put("/me", updateProfileController);
 
 export default router;

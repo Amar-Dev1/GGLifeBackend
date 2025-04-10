@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 export const profileSchema = z.object({
+  name: z.string().max(255, "must be at most 255 characters"),
   bio: z
     .string()
-    .max(5, "must be at most 500 characters")
+    .max(500, "must be at most 500 characters")
     .optional()
     .nullable(),
   photo: z

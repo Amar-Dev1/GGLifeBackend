@@ -1,26 +1,28 @@
-import express from "express";
+import { Router } from "express";
 import {
-  getAllWeeks,
-  createWeek,
-  updateWeek,
-  deleteWeek,
-  getSpecificWeek,
+  createWeekController,
+  deleteAllWeeksController,
+  deleteWeekController,
+  getSingleWeekController,
+  listWeeksController,
+  updateWeekController,
 } from "../controllers/weekController";
-import { validate } from "../middlewares/validator";
-import { weekSchema } from "../validations/weekSchema";
-import authenticateUser from "../middlewares/authenticatedUser";
-import authorizedUser from "../middlewares/authorizedUser";
 
-const router = express.Router();
-router.get("/", authenticateUser, getAllWeeks);
-router.get("/:weekId", authenticateUser, authorizedUser, getSpecificWeek);
-router.post(
-  "/",
-  authenticateUser,
-  validate(weekSchema),
-  createWeek
-);
-router.put("/:weekId", authenticateUser, authorizedUser, updateWeek);
-router.delete("/:weekId", authenticateUser, authorizedUser, deleteWeek);
+const router = Router();
+
+// List all weeks
+router.get("/", listWeeksController);
+
+// Create a new week
+router.post("/", createWeekController);
+
+// Delete all weeks
+router.delete("/", deleteAllWeeksController);
+
+// Get, update, or delete a specific week by weekId
+router
+  .get("/:weekId", getSingleWeekController)
+  .put("/:weekId", updateWeekController)
+  .delete("/:weekId", deleteWeekController);
 
 export default router;
