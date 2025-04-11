@@ -1,15 +1,15 @@
 import { Request } from "express";
 
 export interface RegisterInput {
-    name: string;
-    email: string;
-    password: string;
-    adminKey?:string;
+  name: string;
+  email: string;
+  password: string;
+  adminKey?: string;
 }
 
 export interface LoginInput {
-    email:string;
-    password:string;
+  email: string;
+  password: string;
 }
 
 export interface TokenPayload {
