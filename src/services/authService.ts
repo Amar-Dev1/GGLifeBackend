@@ -51,9 +51,7 @@ export const registerUser = async (data: RegisterInput) => {
         process.env.JWT_SECRET as string,
         { expiresIn: "1d" }
       );
-
       sendVerificationEmail(data.email, token);
-
       return { user: { ...createdUser, profile } };
     });
     return result;
@@ -63,6 +61,20 @@ export const registerUser = async (data: RegisterInput) => {
       err instanceof Error ? err.message : "An unknown error occurred"
     );
   }
+};
+
+export const resendVerificationEmail = async (email: string) => {
+  const user = await prisma.user.findUnique({ where: { email: email } });
+
+  if (user?.verified) throw new Error("email already verified");
+
+  const token = jwt.sign(
+    { email: user?.email},
+    process.env.JWT_SECRET as string,
+    { expiresIn: "1d" }
+  );
+
+  sendVerificationEmail(email, token);
 };
 
 export const loginUser = async (data: LoginInput) => {
