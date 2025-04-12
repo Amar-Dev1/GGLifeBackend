@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { LoginInput, RegisterInput } from "../types/auth.types";
 import generateToken from "../utils/generateToken";
+import jwt from "jsonwebtoken";
+import { sendVerificationEmail } from "../utils/emailUtils";
 
 const prisma = new PrismaClient();
 
@@ -22,12 +24,14 @@ export const registerUser = async (data: RegisterInput) => {
       let role: "USER" | "ADMIN" = "USER"; // Default role is USER
       if (data.adminKey && data.adminKey === process.env.ADMIN_KEY) {
         role = "ADMIN";
-   }
-  
+      }
+
       let { adminKey, ...updateData } = data;
       const createdUser = await prisma.user.create({
         data: {
-      ...updateData,password:hashedPassword, role
+          ...updateData,
+          password: hashedPassword,
+          role,
         },
       });
 
@@ -40,6 +44,15 @@ export const registerUser = async (data: RegisterInput) => {
           bio: "",
         },
       });
+
+      // 5. generate email token
+      const token = jwt.sign(
+        { email: createdUser.email },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1d" }
+      );
+
+      sendVerificationEmail(data.email, token);
 
       return { user: { ...createdUser, profile } };
     });
@@ -58,9 +71,13 @@ export const loginUser = async (data: LoginInput) => {
     const user = await prisma.user.findUnique({
       where: { email: data.email },
     });
+
     if (!user) throw new Error("user not found");
 
-    // 2. compare the password
+    // 2. check if verified
+    if (!user.verified) throw new Error("you must verify your email");
+
+    // 3. compare the password
     const matchPassword = bcrypt.compare(user.password, data.password);
     if (!matchPassword) throw new Error("invalid email or password");
 

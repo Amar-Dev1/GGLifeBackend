@@ -3,11 +3,9 @@ import { loginUser, registerUser } from "../services/authService";
 
 export const registerController = async (req: Request, res: Response) => {
   try {
-    console.log('req.body:', req.body);
-    
     const result = await registerUser(req.body);
     res.status(201).json({
-      message: "User registeration successfully",
+      message: "User registered successfully and email verification sent !",
       data: result,
     });
   } catch (err) {

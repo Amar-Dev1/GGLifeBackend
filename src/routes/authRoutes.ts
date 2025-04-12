@@ -8,7 +8,7 @@ import { userSchema } from "../validations/userSchema";
 
 const router = Router();
 
-router.post("/register", validate(userSchema), registerController); // ✅
-router.post("/login", loginController); // ✅
+router.post("/register", validate(userSchema), registerController); 
+router.post("/login", loginController);
 
 export default router;

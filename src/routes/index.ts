@@ -10,7 +10,7 @@ import authenticateUser from "../middlewares/authenticatedUser";
 const router = Router();
 
 router.use("/auth", authRoutes);
-router.use("auth/",emailRoutes)
+router.use("/auth",emailRoutes)
 router.use("/users", authenticateUser,userRoutes);
 router.use("/profiles", authenticateUser, profileRoutes);
 router.use("/weeks", authenticateUser, weekRoutes);
