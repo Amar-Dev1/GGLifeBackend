@@ -3,6 +3,9 @@ prisma/dev.db
 prisma/dev.sqlite
 prisma/generated/
 
+# vscode
+.vscode
+
 # Node.js
 node_modules/
 .env
