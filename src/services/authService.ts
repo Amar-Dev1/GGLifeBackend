@@ -52,7 +52,7 @@ export const registerUser = async (data: RegisterInput) => {
         { expiresIn: "1d" }
       );
       sendVerificationEmail(data.email, token);
-      return { user: { ...createdUser, profile } };
+      return { user: { ...createdUser, profile },token };
     });
     return result;
   } catch (err) {

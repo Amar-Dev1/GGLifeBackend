@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
-import jwt from "jsonwebtoken";
 
 export const sendVerificationEmail = async (email: string,token:string) => {
   // const emailToken = jwt.sign({ email }, process.env.EMAIL_SECRET as string, { expiresIn: "15m" });
-  const url = `http://localhost:3000/api/auth/verify-email/${token}`;
+  const url = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
